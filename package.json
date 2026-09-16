@@ -12,6 +12,7 @@
     "server:dev": "nodemon",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\"",
     "server:seed": "tsx scripts/seed.ts",
+    "catalog:refresh-images": "tsx scripts/refresh-catalog-images.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:concurrency": "tsx scripts/concurrency-test.ts"
