@@ -151,6 +151,23 @@ Required before production: secret manager and key rotation; HTTPS/HSTS; proper 
 7. Send an amount in the reserve request and show the server charges the catalog amount instead.
 8. In admin, show a successful payment moves out of pending via signed webhook/reconciliation; request a refund endpoint and demonstrate a `charge.refunded` webhook. Dispute test remains a pre-production sandbox test item.
 
+## Production sign-off sandbox checklist
+
+None of the following may be marked “passed” based on code review alone. Capture the Stripe Dashboard object/event IDs, application order/reservation IDs, before-and-after stock, and relevant redacted server logs for each run.
+
+| # | Required sandbox proof | Pass criterion | Current status |
+|---|---|---|---|
+| 1 | Success, generic decline, insufficient funds, expired card, 3DS success and 3DS failure | Each final payment state and hold/stock transition agrees in Stripe, database, and admin view | Requires execution |
+| 2 | Resend an identical Stripe CLI webhook; deliver a terminal event out of order | Event ID is recorded once; no duplicate order, confirmation, release, or stock mutation | Requires execution |
+| 3 | Drop browser/network immediately after payment succeeds, with no usable return redirect | Signed webhook or server reconciliation marks the order paid and capacity stays consumed | Requires execution |
+| 4 | Full refund, partial refund, a second partial refund, and a failed refund | Refund total never exceeds captured amount; provider state, order state, audit record, and operator error are consistent | Requires execution; cumulative partial-refund ledger is a production-hardening follow-up |
+| 5 | Open and close a simulated dispute using Stripe test tooling | Order is flagged `disputed`; immutable audit entry and operations task/alert are created; registration history remains intact | Requires execution; operations-task integration is a production-hardening follow-up |
+| 6 | Slow/failing Stripe API calls during create, retrieve, and refund | Customer receives a bounded actionable response; operator receives correlation ID, structured/redacted error, and alert; no silent hang or duplicate charge | Requires fault injection and observability integration |
+
+### Evidence record template
+
+For each test record: timestamp/environment; tester; card or Stripe trigger (never store PAN/CVC); provider PaymentIntent/Charge/Refund/Dispute ID; local order/reservation ID; expected state; observed Stripe state; observed database state; observed stock; event IDs in arrival order; screenshots/log references; result; issue link and owner if failed.
+
 ## Current project mapping
 
 The commerce UI is only a visual test surface; its Product maps directly to a future League/Division slot. `availableStock` is the atomic remaining capacity; `Reservation` is the expiring registration hold; `Order` is the provider-linked payment/transaction; Socket.IO demonstrates reactive capacity updates. These mechanisms answer the payment/concurrency portion of the tennis brief but do not claim player/league/history/RBAC implementation.

@@ -93,3 +93,5 @@ For a real deployment, set `ADMIN_API_KEY` and enter it at `/admin`. The local t
 The project has been assessed against the Atlanta Tennis backend/payment brief. The detailed scope decision, provider analysis, state model, failure scenarios, testing evidence and explicit unknowns are in [the technical assessment](docs/TENNIS_PLATFORM_TECHNICAL_ASSESSMENT.md) and its rendered PDF at `output/pdf/Atlanta_Tennis_Technical_Assessment.pdf`.
 
 The Stripe adapter is implemented and testable. Worldpay and E2Pay are intentionally represented as future adapters, not claimed integrations: their merchant contract, geography/currency capability, credentials, callback/security configuration and sandbox behavior must be validated before implementation.
+
+Before production sign-off, execute and record the six required sandbox proof groups in the assessment: card/3DS outcomes, duplicate and out-of-order webhooks, lost browser redirect, full/partial/failed refunds, dispute lifecycle, and Stripe API failure/latency handling.
