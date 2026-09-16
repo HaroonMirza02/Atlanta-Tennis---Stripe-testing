@@ -6,7 +6,19 @@ import { CheckoutModal } from '../components/CheckoutModal'
 interface Product { _id: string; name: string; description: string; imageUrl: string; priceCents: number; totalStock: number; availableStock: number }
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const price = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
-const FALLBACK_TEE_IMAGE = 'https://i.pinimg.com/736x/be/39/5b/be395bb88e399ebfe9370c2fef6e296b.jpg'
+const FALLBACK_TEE_IMAGE = 'https://images.rawpixel.com/image_social_landscape/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI1LTEwL3NyLWltYWdlLTIxMTAyMDI1LWt1MDctcy04NjJfMS5qcGc.jpg'
+const WORN_TEE_IMAGES: Record<string, string> = {
+  'Ivory T-Shirt': 'https://www.muji.com/public/media/img/item/4550583758820_04_1260.jpg',
+  'Navy Pocket T-Shirt': 'https://media.falabella.com/falabellaCL/127728373_03/w%3D1500%2Ch%3D1500%2Cfit%3Dcover',
+  'Black T-Shirt': 'https://notbasics.co.uk/cdn/shop/files/black-cropped-tshirt_2b5a1804-37c2-4fe2-9c25-73fabb7cb46b.png?v=1706046963&width=1000',
+  'Clay T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
+  'White T-Shirt': FALLBACK_TEE_IMAGE,
+  'Moss Green T-Shirt': 'https://guda.uk/cdn/shop/products/IMG_1723-e1586109902637-scaled.jpg?v=1692129402',
+  'Stone T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
+  'Cobalt Blue T-Shirt': 'https://images.jackjones.com/12191190/3644544/003/jackjones-paquetede5camisetalisocuelloredondo-azul.jpg?crop=1.91%3A1&quality=90&v=2148e5cab58d8b7070c5e939bae8141e&width=1200',
+  'Sand T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
+  'Graphite T-Shirt': 'https://notbasics.co.uk/cdn/shop/files/black-cropped-tshirt_2b5a1804-37c2-4fe2-9c25-73fabb7cb46b.png?v=1706046963&width=1000',
+}
 const useTeeFallback = (event: React.SyntheticEvent<HTMLImageElement>) => {
   const image = event.currentTarget
   if (image.src !== FALLBACK_TEE_IMAGE) image.src = FALLBACK_TEE_IMAGE
@@ -24,7 +36,7 @@ export default function Home() {
     try {
       const response = await fetch(`${API}/api/products`)
       const data = await response.json()
-      if (data.success) setProducts(data.products)
+      if (data.success) setProducts(data.products.map((product: Product) => ({ ...product, imageUrl: WORN_TEE_IMAGES[product.name] || product.imageUrl })))
       else setNotice('The collection is temporarily unavailable. Please try again shortly.')
     } catch { setNotice('Could not connect to the storefront service.') }
     finally { setLoading(false) }
