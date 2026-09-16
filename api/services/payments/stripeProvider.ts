@@ -4,7 +4,9 @@ import type { PaymentProvider } from './types.js'
 export const stripeProvider: PaymentProvider = {
   name: 'stripe',
   async createPayment({ amountCents, currency, idempotencyKey, metadata }) {
-    const intent = await stripe.paymentIntents.create({ amount: amountCents, currency, metadata }, { idempotencyKey })
+    // Card-only test bed: explicitly avoid redirect methods unless the application
+    // also supplies and handles a return URL for each payment attempt.
+    const intent = await stripe.paymentIntents.create({ amount: amountCents, currency, metadata, automatic_payment_methods: { enabled: true, allow_redirects: 'never' } }, { idempotencyKey })
     return { providerPaymentId: intent.id, clientSecret: intent.client_secret, status: 'pending' }
   },
   async retrievePayment(providerPaymentId) {

@@ -157,16 +157,18 @@ None of the following may be marked “passed” based on code review alone. Cap
 
 | # | Required sandbox proof | Pass criterion | Current status |
 |---|---|---|---|
-| 1 | Success, generic decline, insufficient funds, expired card, 3DS success and 3DS failure | Each final payment state and hold/stock transition agrees in Stripe, database, and admin view | Requires execution |
-| 2 | Resend an identical Stripe CLI webhook; deliver a terminal event out of order | Event ID is recorded once; no duplicate order, confirmation, release, or stock mutation | Requires execution |
-| 3 | Drop browser/network immediately after payment succeeds, with no usable return redirect | Signed webhook or server reconciliation marks the order paid and capacity stays consumed | Requires execution |
-| 4 | Full refund, partial refund, a second partial refund, and a failed refund | Refund total never exceeds captured amount; provider state, order state, audit record, and operator error are consistent | Requires execution; cumulative partial-refund ledger is a production-hardening follow-up |
-| 5 | Open and close a simulated dispute using Stripe test tooling | Order is flagged `disputed`; immutable audit entry and operations task/alert are created; registration history remains intact | Requires execution; operations-task integration is a production-hardening follow-up |
-| 6 | Slow/failing Stripe API calls during create, retrieve, and refund | Customer receives a bounded actionable response; operator receives correlation ID, structured/redacted error, and alert; no silent hang or duplicate charge | Requires fault injection and observability integration |
+| 1 | Success, generic decline, insufficient funds, expired card, 3DS success and 3DS failure | Each final payment state and hold/stock transition agrees in Stripe, database, and admin view | **Partial, 16 Sep 2026:** direct Stripe API success/decline/insufficient/expired/3DS-required verified; 3DS success/failure and local DB/admin transitions blocked pending database connection |
+| 2 | Resend an identical Stripe CLI webhook; deliver a terminal event out of order | Event ID is recorded once; no duplicate order, confirmation, release, or stock mutation | **Requires end-to-end execution:** direct Stripe idempotency was verified, but local signed webhook requires database/API startup |
+| 3 | Drop browser/network immediately after payment succeeds, with no usable return redirect | Signed webhook or server reconciliation marks the order paid and capacity stays consumed | **Requires end-to-end execution:** browser/UI plus local database connection unavailable |
+| 4 | Full refund, partial refund, a second partial refund, and a failed refund | Refund total never exceeds captured amount; provider state, order state, audit record, and operator error are consistent | **Requires end-to-end execution;** cumulative partial-refund ledger is a production-hardening follow-up |
+| 5 | Open and close a simulated dispute using Stripe test tooling | Order is flagged `disputed`; immutable audit entry and operations task/alert are created; registration history remains intact | **Requires end-to-end execution;** operations-task integration is a production-hardening follow-up |
+| 6 | Slow/failing Stripe API calls during create, retrieve, and refund | Customer receives a bounded actionable response; operator receives correlation ID, structured/redacted error, and alert; no silent hang or duplicate charge | **Partial, 16 Sep 2026:** real Stripe create failure observed and adapter fixed; retrieve/refund fault injection and alerting remain required |
 
 ### Evidence record template
 
 For each test record: timestamp/environment; tester; card or Stripe trigger (never store PAN/CVC); provider PaymentIntent/Charge/Refund/Dispute ID; local order/reservation ID; expected state; observed Stripe state; observed database state; observed stock; event IDs in arrival order; screenshots/log references; result; issue link and owner if failed.
+
+Direct Stripe sandbox evidence and remaining local prerequisites are recorded in `docs/SANDBOX_EVIDENCE_2026-09-16.md`.
 
 ## Current project mapping
 

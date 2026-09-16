@@ -51,7 +51,7 @@ for raw in source.read_text(encoding='utf-8').splitlines():
     elif line.startswith('|'):
         cells = [cell.strip() for cell in line.strip('|').split('|')]
         if not all(set(cell) <= set('-: ') for cell in cells):
-            text = '  •  '.join(cells)
+            text = '  •  '.join(cells).replace('**', '').replace('`', '')
             story.append(Paragraph(escape(text), styles['SmallCustom']))
     elif line.startswith('- '):
         clean = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', line[2:])
