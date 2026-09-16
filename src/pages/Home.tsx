@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { ArrowRight, Check, Menu, ShoppingBag, Sparkles, X, ShieldCheck } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
 import { CheckoutModal } from '../components/CheckoutModal'
+import { useNavigate } from 'react-router-dom'
 
 interface Product { _id: string; name: string; description: string; imageUrl: string; priceCents: number; totalStock: number; availableStock: number }
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
@@ -21,6 +22,7 @@ const useTeeFallback = (event: React.SyntheticEvent<HTMLImageElement>) => {
 }
 
 export default function Home() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [checkoutData, setCheckoutData] = useState<{ clientSecret: string; amount: number; expiresAt: string; reservationId: string; productName: string } | null>(null)
@@ -72,7 +74,7 @@ export default function Home() {
     <section className="manifesto" id="about"><Sparkles size={21}/><p>Better basics begin with better decisions: fewer, more considered pieces designed to stay in rotation.</p><span>ATELIER TEE / EST. 2026</span></section>
     <footer><span>© 2026 Atelier Tee</span><span>Secure checkout · USD</span><a href="/admin">Store operations</a></footer>
     {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} onPay={() => handleBuy(selectedProduct)} isLoading={startingCheckout} />}
-    {checkoutData && <CheckoutModal clientSecret={checkoutData.clientSecret} amount={checkoutData.amount} expiresAt={checkoutData.expiresAt} productName={checkoutData.productName} onClose={() => { setCheckoutData(null); fetchProducts() }} onSuccess={async () => { try { await fetch(`${API}/api/orders/${checkoutData.reservationId}/reconcile`, { method: 'POST' }); setNotice('Payment confirmed. Your order is complete.') } catch { setNotice('Payment confirmed. We are finalizing your order now.') } finally { setCheckoutData(null); fetchProducts() } }} />}
+    {checkoutData && <CheckoutModal clientSecret={checkoutData.clientSecret} amount={checkoutData.amount} expiresAt={checkoutData.expiresAt} productName={checkoutData.productName} onClose={() => { setCheckoutData(null); fetchProducts() }} onSuccess={async () => { try { await fetch(`${API}/api/orders/${checkoutData.reservationId}/reconcile`, { method: 'POST' }) } finally { setCheckoutData(null); fetchProducts(); navigate(`/thank-you?order=${checkoutData.reservationId}`) } }} onFailure={() => { const order = checkoutData.reservationId; setCheckoutData(null); fetchProducts(); navigate(`/payment-failed?order=${order}`) }} />}
   </main>
 }
 

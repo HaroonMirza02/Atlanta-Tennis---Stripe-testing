@@ -130,7 +130,7 @@ router.get('/orders/:id', async (req: Request, res: Response): Promise<void> => 
         { _id: mongoose.isValidObjectId(req.params.id) ? req.params.id : null },
         { reservationId: mongoose.isValidObjectId(req.params.id) ? req.params.id : null }
       ]
-    })
+    }).populate('productId', 'name imageUrl')
     
     if (!order) {
       res.status(404).json({ success: false, error: 'Order not found' })
