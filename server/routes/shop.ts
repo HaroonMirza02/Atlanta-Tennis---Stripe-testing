@@ -119,6 +119,53 @@ router.post('/reserve', reserveCheckout)
 router.post('/checkout/reserve', reserveCheckout)
 
 /**
+ * POST /api/orders/:id/cancel
+ * Cancel an unfinished payment and immediately return its held units to stock.
+ */
+router.post('/orders/:id/cancel', async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      res.status(400).json({ success: false, error: 'Invalid order reference' })
+      return
+    }
+    const order = await Order.findOne({ $or: [{ _id: req.params.id }, { reservationId: req.params.id }] })
+    if (!order) {
+      res.status(404).json({ success: false, error: 'Order not found' })
+      return
+    }
+
+    const intent = await stripe.paymentIntents.retrieve(order.stripePaymentIntentId)
+    if (intent.status === 'succeeded') {
+      res.status(409).json({ success: false, error: 'Payment has already succeeded and cannot be cancelled.' })
+      return
+    }
+    // Stripe refuses cancelling already-terminal failures; those still need their
+    // local reservation released immediately.
+    if (['requires_payment_method', 'requires_confirmation', 'requires_action', 'requires_capture', 'processing'].includes(intent.status)) {
+      await stripe.paymentIntents.cancel(order.stripePaymentIntentId)
+    }
+
+    // Claim the hold before incrementing stock: concurrent close, webhook, and cleanup
+    // requests can only allow one owner to release it.
+    const reservation = await Reservation.findOneAndUpdate(
+      { _id: order.reservationId, status: 'pending' },
+      { status: 'cancelled' },
+      { new: true },
+    )
+    if (reservation) {
+      const product = await Product.findByIdAndUpdate(reservation.productId, { $inc: { availableStock: reservation.quantity } }, { new: true })
+      await Order.updateOne({ _id: order._id }, { status: 'cancelled' })
+      if (product) import('../services/socket.js').then(({ broadcastStockUpdate }) => broadcastStockUpdate(product._id.toString(), product.availableStock))
+      void writeAudit({ actorType: 'system', action: 'checkout.cancelled', entityType: 'order', entityId: order._id.toString(), after: { status: 'cancelled' }, correlationId: order.stripePaymentIntentId })
+    }
+    res.json({ success: true, released: Boolean(reservation) })
+  } catch (error) {
+    console.error('Checkout cancellation error:', error)
+    res.status(500).json({ success: false, error: 'Could not cancel checkout' })
+  }
+})
+
+/**
  * GET /api/orders/:id
  * Poll order status
  */

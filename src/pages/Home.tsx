@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ArrowRight, Check, Menu, ShoppingBag, Sparkles, X, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, Menu, ShoppingBag, Sparkles, X, ShieldCheck, Shirt } from 'lucide-react'
 import { useSocket } from '../hooks/useSocket'
 import { CheckoutModal } from '../components/CheckoutModal'
 import { useNavigate } from 'react-router-dom'
@@ -63,8 +63,13 @@ export default function Home() {
     finally { setStartingCheckout(false) }
   }
 
+  const cancelCheckout = async (reservationId: string) => {
+    try { await fetch(`${API}/api/orders/${reservationId}/cancel`, { method: 'POST' }) }
+    finally { setCheckoutData(null); fetchProducts() }
+  }
+
   return <main>
-    <header className="site-header"><a href="#top" className="brand">ATELIER<span>TEE</span></a><nav><a href="#shop">Shop</a><a href="#about">Our standard</a><a href="/admin">Operations</a></nav><button className="bag" aria-label="Open bag"><ShoppingBag size={19} /><span>0</span></button><Menu className="mobile-menu" /></header>
+    <header className="site-header"><a href="#top" className="brand"><Shirt className="brand-icon" size={20} strokeWidth={1.7}/>ATELIER<span>TEE</span></a><nav><a href="#shop">Shop</a><a href="#about">Our standard</a><a href="/admin">Operations</a></nav><button className="bag" aria-label="Open bag"><ShoppingBag size={19} /><span>0</span></button><Menu className="mobile-menu" /></header>
     <section className="hero hero-minimal" id="top"><div className="hero-copy"><p className="eyebrow">ATELIER TEE / ESSENTIALS</p><h1>Good tees,<br /><span>on repeat.</span></h1><p className="hero-intro">Premium-weight cotton. Refined fits. Small batches made to stay in your weekly rotation.</p><div className="hero-actions"><a className="button button-light" href="#shop">Shop collection <ArrowRight size={17} /></a><span>10 considered styles · live stock</span></div></div><div className="hero-side-note"><span>01</span><p>Built around fewer<br />better basics.</p></div></section>
     <section className="assurances"><span><Check size={16}/> Secure Stripe checkout</span><span><Check size={16}/> Live inventory</span><span><Check size={16}/> Small-batch production</span><span><Check size={16}/> USD only</span></section>
     <section className="collection" id="shop"><div className="section-heading"><div><p className="eyebrow">THE COLLECTION</p><h2>Essential, refined.</h2></div><p>Each purchase reserves inventory before payment, so the stock you see is always the stock available.</p></div>
@@ -74,7 +79,7 @@ export default function Home() {
     <section className="manifesto" id="about"><Sparkles size={21}/><p>Better basics begin with better decisions: fewer, more considered pieces designed to stay in rotation.</p><span>ATELIER TEE / EST. 2026</span></section>
     <footer><span>© 2026 Atelier Tee</span><span>Secure checkout · USD</span><a href="/admin">Store operations</a></footer>
     {selectedProduct && <ProductDetail product={selectedProduct} onClose={() => setSelectedProduct(null)} onPay={() => handleBuy(selectedProduct)} isLoading={startingCheckout} />}
-    {checkoutData && <CheckoutModal clientSecret={checkoutData.clientSecret} amount={checkoutData.amount} expiresAt={checkoutData.expiresAt} productName={checkoutData.productName} onClose={() => { setCheckoutData(null); fetchProducts() }} onSuccess={async () => { try { await fetch(`${API}/api/orders/${checkoutData.reservationId}/reconcile`, { method: 'POST' }) } finally { setCheckoutData(null); fetchProducts(); navigate(`/thank-you?order=${checkoutData.reservationId}`) } }} onFailure={() => { const order = checkoutData.reservationId; setCheckoutData(null); fetchProducts(); navigate(`/payment-failed?order=${order}`) }} />}
+    {checkoutData && <CheckoutModal clientSecret={checkoutData.clientSecret} amount={checkoutData.amount} expiresAt={checkoutData.expiresAt} productName={checkoutData.productName} onClose={() => cancelCheckout(checkoutData.reservationId)} onSuccess={async () => { try { await fetch(`${API}/api/orders/${checkoutData.reservationId}/reconcile`, { method: 'POST' }) } finally { setCheckoutData(null); fetchProducts(); navigate(`/thank-you?order=${checkoutData.reservationId}`) } }} onFailure={async () => { const order = checkoutData.reservationId; await cancelCheckout(order); navigate(`/payment-failed?order=${order}`) }} />}
   </main>
 }
 
