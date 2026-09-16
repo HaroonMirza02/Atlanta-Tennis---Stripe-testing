@@ -4,17 +4,13 @@ import { Product } from '../server/models/Product.js'
 
 dotenv.config()
 
+const whiteHanger = 'https://static.zarahome.net/8/photos4/2023/I/4/1/p/7173/120/250/7173120250_1_1_3.jpg?t=1684933369198'
+const blackHanger = 'https://i5.walmartimages.com/asr/7e989895-9446-4ac5-82c7-235f75296486.b4189f4ea70ff176b439f3e7325d037c.jpeg?odnBg=FFFFFF&odnHeight=1067&odnWidth=800'
 const sources: Record<string, string> = {
-  'Ivory T-Shirt': 'https://www.muji.com/public/media/img/item/4550583758820_04_1260.jpg',
-  'Navy Pocket T-Shirt': 'https://media.falabella.com/falabellaCL/127728373_03/w%3D1500%2Ch%3D1500%2Cfit%3Dcover',
-  'Black T-Shirt': 'https://notbasics.co.uk/cdn/shop/files/black-cropped-tshirt_2b5a1804-37c2-4fe2-9c25-73fabb7cb46b.png?v=1706046963&width=1000',
-  'Clay T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
-  'White T-Shirt': 'https://images.rawpixel.com/image_social_landscape/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI1LTEwL3NyLWltYWdlLTIxMTAyMDI1LWt1MDctcy04NjJfMS5qcGc.jpg',
-  'Moss Green T-Shirt': 'https://guda.uk/cdn/shop/products/IMG_1723-e1586109902637-scaled.jpg?v=1692129402',
-  'Stone T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
-  'Cobalt Blue T-Shirt': 'https://images.jackjones.com/12191190/3644544/003/jackjones-paquetede5camisetalisocuelloredondo-azul.jpg?crop=1.91%3A1&quality=90&v=2148e5cab58d8b7070c5e939bae8141e&width=1200',
-  'Sand T-Shirt': 'https://images.jackjones.com/12156101/3218229/003/jackjones-jjeorganicbasicteesso-necknoos-beige.jpg?crop=1.91%3A1&quality=90&v=ccc71d631a1c9531bcdf37877a6f48fe&width=1200',
-  'Graphite T-Shirt': 'https://notbasics.co.uk/cdn/shop/files/black-cropped-tshirt_2b5a1804-37c2-4fe2-9c25-73fabb7cb46b.png?v=1706046963&width=1000',
+  'Ivory T-Shirt': whiteHanger, 'Navy Pocket T-Shirt': blackHanger, 'Black T-Shirt': blackHanger,
+  'Clay T-Shirt': whiteHanger, 'White T-Shirt': whiteHanger, 'Moss Green T-Shirt': blackHanger,
+  'Stone T-Shirt': whiteHanger, 'Cobalt Blue T-Shirt': blackHanger, 'Sand T-Shirt': whiteHanger,
+  'Graphite T-Shirt': blackHanger,
 }
 
 async function refreshCatalogImages() {
