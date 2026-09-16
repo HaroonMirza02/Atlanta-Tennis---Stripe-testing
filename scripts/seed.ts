@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
-import { Product } from '../api/models/Product.js'
-import { Reservation } from '../api/models/Reservation.js'
-import { Order } from '../api/models/Order.js'
+import { Product } from '../server/models/Product.js'
+import { Reservation } from '../server/models/Reservation.js'
+import { Order } from '../server/models/Order.js'
 
 dotenv.config()
 const MONGODB_URI = process.env.MONGODB_URI

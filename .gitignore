@@ -36,3 +36,5 @@ coverage/
 
 # Generated reports are reproducible; retain source assessment under docs/.
 output/
+
+.vercel
