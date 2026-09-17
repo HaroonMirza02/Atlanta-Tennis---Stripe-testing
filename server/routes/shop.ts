@@ -18,7 +18,12 @@ const router = Router()
 router.get('/products', async (req: Request, res: Response): Promise<void> => {
   try {
     const products = await Product.find({}).sort({ createdAt: -1 })
-    res.json({ success: true, products })
+    const held = await Reservation.aggregate([
+      { $match: { status: 'pending', expiresAt: { $gt: new Date() } } },
+      { $group: { _id: '$productId', quantity: { $sum: '$quantity' } } },
+    ])
+    const heldByProduct = new Map(held.map((item) => [item._id.toString(), item.quantity]))
+    res.json({ success: true, products: products.map((product) => ({ ...product.toObject(), isHeld: product.availableStock === 0 && Boolean(heldByProduct.get(product._id.toString())) })) })
   } catch (error) {
     console.error('Error fetching products:', error)
     res.status(500).json({ success: false, error: 'Internal Server Error' })

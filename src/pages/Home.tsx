@@ -4,7 +4,7 @@ import { useSocket } from '../hooks/useSocket'
 import { CheckoutModal } from '../components/CheckoutModal'
 import { useNavigate } from 'react-router-dom'
 
-interface Product { _id: string; name: string; description: string; imageUrl: string; priceCents: number; totalStock: number; availableStock: number }
+interface Product { _id: string; name: string; description: string; imageUrl: string; priceCents: number; totalStock: number; availableStock: number; isHeld?: boolean }
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 const price = (cents: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
 const WHITE_HANGER_TEE = 'https://static.zarahome.net/8/photos4/2023/I/4/1/p/7173/120/250/7173120250_1_1_3.jpg?t=1684933369198'
@@ -35,13 +35,21 @@ export default function Home() {
     try {
       const response = await fetch(`${API}/api/products`)
       const data = await response.json()
-      if (data.success) setProducts(data.products.map((product: Product) => ({ ...product, imageUrl: HANGER_TEE_IMAGES[product.name] || product.imageUrl })))
+      if (data.success) {
+        const refreshed = data.products.map((product: Product) => ({ ...product, imageUrl: HANGER_TEE_IMAGES[product.name] || product.imageUrl }))
+        setProducts(refreshed)
+        setSelectedProduct((selected) => selected ? refreshed.find((product: Product) => product._id === selected._id) || null : null)
+      }
       else setNotice('The collection is temporarily unavailable. Please try again shortly.')
     } catch { setNotice('Could not connect to the storefront service.') }
     finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { fetchProducts() }, [fetchProducts])
+  useEffect(() => {
+    void fetchProducts()
+    const refresh = window.setInterval(fetchProducts, 2500)
+    return () => window.clearInterval(refresh)
+  }, [fetchProducts])
   const onStock = useCallback(({ productId, availableStock }: { productId: string; availableStock: number }) => {
     setProducts((items) => items.map((item) => item._id === productId ? { ...item, availableStock } : item))
   }, [])
@@ -55,6 +63,7 @@ export default function Home() {
       const data = await response.json()
       if (!response.ok || !data.success) {
         setNotice(response.status === 409 ? 'Sorry, this item was just purchased by someone else.' : (data.error || 'We could not hold this item.'))
+        if (response.status === 409) setSelectedProduct((selected) => selected ? { ...selected, availableStock: 0, isHeld: true } : null)
         fetchProducts()
         return
       }
@@ -85,5 +94,6 @@ export default function Home() {
 }
 
 function ProductDetail({ product, onClose, onPay, isLoading }: { product: Product; onClose: () => void; onPay: () => void; isLoading: boolean }) {
-  return <div className="product-backdrop" role="dialog" aria-modal="true" aria-label={`${product.name} details`}><section className="product-panel"><button className="checkout-close" onClick={onClose} aria-label="Close product details"><X size={20}/></button><div className="product-panel-image"><img src={product.imageUrl} alt={product.name} onError={useTeeFallback}/></div><div className="product-panel-copy"><p className="eyebrow">ATELIER TEE / ESSENTIALS</p><h2>{product.name}</h2><strong className="detail-price">{price(product.priceCents)}</strong><p className="detail-description">{product.description}</p><div className="detail-meta"><span>100% considered cotton</span><span>{product.availableStock ? `${product.availableStock} in stock now` : 'Currently sold out'}</span></div>{product.availableStock > 0 ? <><button className="detail-pay" onClick={onPay} disabled={isLoading}>{isLoading ? 'Preparing secure checkout…' : <>Secure checkout <ArrowRight size={17}/></>}</button><p className="detail-security"><ShieldCheck size={15}/> Inventory is held only after you start secure checkout.</p></> : <button className="detail-pay" disabled>Currently unavailable</button>}</div></section></div>
+  const unavailable = product.availableStock === 0
+  return <div className="product-backdrop" role="dialog" aria-modal="true" aria-label={`${product.name} details`}><section className="product-panel"><button className="checkout-close" onClick={onClose} aria-label="Close product details"><X size={20}/></button><div className="product-panel-image"><img src={product.imageUrl} alt={product.name} onError={useTeeFallback}/></div><div className="product-panel-copy"><p className="eyebrow">ATELIER TEE / ESSENTIALS</p><h2>{product.name}</h2><strong className="detail-price">{price(product.priceCents)}</strong><p className="detail-description">{product.description}</p><div className="detail-meta"><span>100% considered cotton</span><span>{product.availableStock ? `${product.availableStock} in stock now` : product.isHeld ? 'Temporarily held' : 'Currently sold out'}</span></div>{!unavailable ? <><button className="detail-pay" onClick={onPay} disabled={isLoading}>{isLoading ? 'Preparing secure checkout…' : <>Secure checkout <ArrowRight size={17}/></>}</button><p className="detail-security"><ShieldCheck size={15}/> Inventory is held only after you start secure checkout.</p></> : product.isHeld ? <div className="held-product-notice"><strong>The last item is currently being held by another shopper.</strong><p>It may return shortly if their checkout is cancelled.</p><button className="detail-pay" onClick={onClose}>Back to shop <ArrowRight size={17}/></button></div> : <button className="detail-pay" disabled>Currently unavailable</button>}</div></section></div>
 }
