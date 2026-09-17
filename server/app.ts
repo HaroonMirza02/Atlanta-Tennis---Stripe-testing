@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url'
 import authRoutes from './routes/auth.js'
 import shopRoutes from './routes/shop.js'
 import adminRoutes from './routes/admin.js'
+import { recordRequest, snapshotMetrics } from './services/metrics.js'
 
 // for esm mode
 const __filename = fileURLToPath(import.meta.url)
@@ -24,6 +25,16 @@ dotenv.config()
 
 const app: express.Application = express()
 
+app.use((req, res, next) => {
+  const started = performance.now()
+  res.on('finish', () => {
+    const durationMs = performance.now() - started
+    recordRequest(req.method, req.path, res.statusCode, durationMs)
+    console.log(JSON.stringify({ type: 'request', method: req.method, path: req.path, status: res.statusCode, durationMs, touchedStripe: Boolean(res.getHeader('x-observability-stripe')), touchedMongo: Boolean(res.getHeader('x-observability-mongo')) }))
+  })
+  next()
+})
+
 app.use(cors())
 
 // Use raw body for Stripe Webhooks before parsing JSON
@@ -32,6 +43,7 @@ app.use('/api/webhooks', express.raw({ type: 'application/json' }), webhookRoute
 
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+app.get('/api/metrics', (_req, res) => res.json({ success: true, metrics: snapshotMetrics() }))
 
 /**
  * API Routes

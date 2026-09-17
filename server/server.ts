@@ -6,6 +6,7 @@ import { connectToDatabase } from './db/mongoose.js';
 import { startCleanupJob, stopCleanupJob } from './services/cleanupJob.js';
 import { initSocket } from './services/socket.js';
 import http from 'http';
+import { startMetricsHeartbeat } from './services/metrics.js';
 
 /**
  * start server with port
@@ -23,6 +24,7 @@ connectToDatabase().then(() => {
   server = httpServer.listen(PORT, () => {
     console.log(`Server ready on port ${PORT}`);
     startCleanupJob();
+    startMetricsHeartbeat();
   });
 }).catch(err => {
   console.error('Failed to connect to Database', err);
