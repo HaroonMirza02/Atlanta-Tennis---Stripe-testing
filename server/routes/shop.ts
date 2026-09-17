@@ -8,6 +8,7 @@ import { Order } from '../models/Order.js'
 import mongoose from 'mongoose'
 import { stripeProvider } from '../services/payments/stripeProvider.js'
 import { writeAudit } from '../services/audit.js'
+import { releaseExpiredReservations } from '../services/cleanupJob.js'
 
 const router = Router()
 
@@ -17,6 +18,7 @@ const router = Router()
  */
 router.get('/products', async (req: Request, res: Response): Promise<void> => {
   try {
+    await releaseExpiredReservations()
     const products = await Product.find({}).sort({ createdAt: -1 })
     const held = await Reservation.aggregate([
       { $match: { status: 'pending', expiresAt: { $gt: new Date() } } },
@@ -36,6 +38,7 @@ router.get('/products', async (req: Request, res: Response): Promise<void> => {
  */
 const reserveCheckout = async (req: Request, res: Response): Promise<void> => {
   try {
+    await releaseExpiredReservations()
     const { productId, quantity } = req.body
 
     if (!productId || !quantity || typeof quantity !== 'number' || quantity < 1) {
