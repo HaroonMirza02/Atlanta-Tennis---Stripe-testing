@@ -29,6 +29,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [startingCheckout, setStartingCheckout] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -69,7 +70,7 @@ export default function Home() {
   }
 
   return <main>
-    <header className="site-header"><a href="#top" className="brand"><Shirt className="brand-icon" size={20} strokeWidth={1.7}/>ATELIER<span>TEE</span></a><nav><a href="#shop">Shop</a><a href="#about">Our standard</a><a href="/admin">Operations</a></nav><button className="bag" aria-label="Open bag"><ShoppingBag size={19} /><span>0</span></button><Menu className="mobile-menu" /></header>
+    <header className="site-header"><a href="#top" className="brand"><Shirt className="brand-icon" size={20} strokeWidth={1.7}/>ATELIER<span>TEE</span></a><nav className={menuOpen ? 'nav-open' : ''}><a onClick={() => setMenuOpen(false)} href="#shop">Shop</a><a onClick={() => setMenuOpen(false)} href="#about">Our standard</a><a onClick={() => setMenuOpen(false)} href="/admin">Operations</a></nav><button className="bag" aria-label="Open bag"><ShoppingBag size={19} /><span>0</span></button><button className="mobile-menu" onClick={() => setMenuOpen((open) => !open)} aria-label="Open navigation" aria-expanded={menuOpen}><Menu /></button></header>
     <section className="hero hero-minimal" id="top"><div className="hero-copy"><p className="eyebrow">ATELIER TEE / ESSENTIALS</p><h1>Good tees,<br /><span>on repeat.</span></h1><p className="hero-intro">Premium-weight cotton. Refined fits. Small batches made to stay in your weekly rotation.</p><div className="hero-actions"><a className="button button-light" href="#shop">Shop collection <ArrowRight size={17} /></a><span>10 considered styles · live stock</span></div></div><div className="hero-side-note"><span>01</span><p>Built around fewer<br />better basics.</p></div></section>
     <section className="assurances"><span><Check size={16}/> Secure Stripe checkout</span><span><Check size={16}/> Live inventory</span><span><Check size={16}/> Small-batch production</span><span><Check size={16}/> USD only</span></section>
     <section className="collection" id="shop"><div className="section-heading"><div><p className="eyebrow">THE COLLECTION</p><h2>Essential, refined.</h2></div><p>Each purchase reserves inventory before payment, so the stock you see is always the stock available.</p></div>

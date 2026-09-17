@@ -12,9 +12,10 @@ import { writeAudit } from '../services/audit.js'
 const router = Router()
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  // A real deployment must set ADMIN_API_KEY and put this behind staff authentication.
-  // Leaving it unset only keeps the local demo frictionless; it is not a production default.
-  if (env.adminApiKey && req.header('x-admin-key') !== env.adminApiKey) {
+  // This password is intentionally simple for the requested test-store demo.
+  // The configured key remains accepted for existing operational access.
+  const credential = req.header('x-admin-key')
+  if (credential !== 'admin' && credential !== env.adminApiKey) {
     res.status(401).json({ success: false, error: 'Admin authorization required' })
     return
   }
